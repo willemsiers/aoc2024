@@ -1,4 +1,4 @@
-package main
+package aoctools
 
 import (
 	"os"
@@ -10,44 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func main() {
-	logrus.Infof("day 1")
-	inputFilePath := filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "aoc2024", "days", "1", "input.txt")
+const Separator = "\r\n"
 
-	logrus.Infof("result part 1: %v (total distance)", part1(inputFilePath))
-	logrus.Infof("result part 2: %v (similarity score)", part2(inputFilePath))
-}
-
-func part1(filePath string) int {
-	column1, column2 := readColumns(filePath)
-
-	diffSum := 0
-	for i := 0; i < len(column1); i++ {
-		diff := column1[i] - column2[i]
-		if diff < 0 {
-			diffSum -= diff
-		} else {
-			diffSum += diff
-		}
-	}
-
-	return diffSum
-}
-
-func part2(filePath string) int {
-	column1, column2 := readColumns(filePath)
-	occurrencesInColumn2 := map[int]int{}
-	for _, id := range column2 {
-		occurrencesInColumn2[id]++
-	}
-	similarity := 0
-	for _, id := range column1 {
-		similarity += id * occurrencesInColumn2[id]
-	}
-	return similarity
-}
-
-func readColumns(filePath string) ([]int, []int) {
+func ReadInput(filePath string) string {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		logrus.Fatalf("failed to stat: %v", err)
@@ -73,10 +38,17 @@ func readColumns(filePath string) ([]int, []int) {
 		logrus.Fatalf("read %d out of %d bytes", n, fileInfo.Size())
 	}
 
-	fileContentsString := string(fileContents)
+	return string(fileContents)
+}
 
-	const separator = "\r\n"
-	lines := strings.Split(fileContentsString, separator)
+func PathRelativeToAOCRoot(parts ...string) string {
+	p := append([]string{os.Getenv("GOPATH"), "src", "github.com", "aoc2024"}, parts...)
+	return filepath.Join(p...)
+}
+
+// SplitColumns: specific to day 1. Maybe move it back.
+func SplitColumns(text string) ([]int, []int) {
+	lines := strings.Split(text, Separator)
 
 	var column1, column2 []int
 
@@ -105,4 +77,22 @@ func readColumns(filePath string) ([]int, []int) {
 	}
 
 	return column1, column2
+}
+
+func MapAtoi(ss []string) []int {
+	result := make([]int, 0, len(ss))
+	for _, s := range ss {
+		i, err := strconv.Atoi(s)
+		if err != nil {
+			logrus.Fatalf("failed to mapAtoi: %v", err)
+		}
+		result = append(result, i)
+	}
+	return result
+}
+
+func RemoveIndex(s []int, i int) []int {
+	result := make([]int, 0, len(s)-1)
+	result = append(result, s[:i]...)
+	return append(result, s[i+1:]...)
 }
